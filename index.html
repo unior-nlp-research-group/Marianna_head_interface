@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Marianna – Voce e Memoria di Napoli</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>🎙️ Marianna</h1>
+    <p>La voce che racconta il patrimonio culturale di Napoli.</p>
+  </header>
+
+  <main>
+    <!-- SEZIONE 1 -->
+    <section class="card">
+      <h2>💬 Chiedi a Marianna</h2>
+      <p class="subtitle">Scrivi la tua domanda e ricevi una risposta dalla memoria culturale napoletana.</p>
+      <textarea id="textInput" placeholder="Es: Raccontami la storia di Castel dell'Ovo..."></textarea>
+      <button id="sendText" onclick="getTextResponse()">Invia domanda</button>
+      <div class="response-box" id="textOutput"></div>
+    </section>
+
+    <!-- SEZIONE 2 -->
+    <section class="card">
+      <h2>🎧 Parla con Marianna</h2>
+      <p class="subtitle">Registra la tua voce e ascolta la risposta di Marianna.</p>
+      <div class="audio-controls">
+        <button id="recordButton" onclick="toggleRecording()">🎙️ Avvia registrazione</button>
+        <button id="sendRecording" onclick="sendRecordedAudio()" disabled>📤 Invia a Marianna</button>
+      </div>
+      <audio id="recordedAudio" controls></audio>
+      <hr>
+      <audio id="responseAudio" controls></audio>
+      <pre id="responseHeaders"></pre>
+    </section>
+  </main>
+
+  <footer>
+    <p>Realizzato con ❤️ dal gruppo <strong>UNIOR NLP Research</strong> · Napoli</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
