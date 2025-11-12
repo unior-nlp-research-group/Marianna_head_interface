@@ -1,9 +1,10 @@
 // Write JavaScript here
+// === CONFIGURAZIONE ===
 const BASE_URL = "https://nlpgroup.unior.it/api/marianna_head";
 const USERNAME = "utenteuniornlp";
 const PASSWORD = "prova_asr_unior";
 
-// --- TESTO → RISPOSTA TESTUALE ---
+// === TESTO → RISPOSTA TESTUALE ===
 async function getTextResponse() {
   const text = document.getElementById("textInput").value;
   const output = document.getElementById("textOutput");
@@ -14,21 +15,40 @@ async function getTextResponse() {
   }
 
   output.textContent = "⏳ Marianna sta cercando la risposta...";
-  
-  const res = await fetch(`${BASE_URL}/text_response`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": "Basic " + btoa(`${USERNAME}:${PASSWORD}`)
-    },
-    body: JSON.stringify({ text })
-  });
 
-  const data = await res.json();
-  output.textContent = data.response || JSON.stringify(data, null, 2);
+  try {
+    const res = await fetch(`${BASE_URL}/text_response`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Basic " + btoa(`${USERNAME}:${PASSWORD}`)
+      },
+      body: JSON.stringify({ text })
+    });
+
+    if (!res.ok) {
+      output.textContent = "❌ Errore di connessione con Marianna.";
+      return;
+    }
+
+    const data = await res.json();
+
+    // Usa il campo corretto della risposta API
+    if (data.summary) {
+      output.textContent = `🗣️ ${data.summary}`;
+    } else if (data.transcription) {
+      output.textContent = `Trascrizione: ${data.transcription}`;
+    } else {
+      output.textContent = "Marianna non ha trovato una risposta.";
+    }
+
+  } catch (err) {
+    output.textContent = "⚠️ Errore di rete o server non raggiungibile.";
+    console.error(err);
+  }
 }
 
-// --- REGISTRAZIONE AUDIO ---
+// === REGISTRAZIONE AUDIO ===
 let mediaRecorder;
 let audioChunks = [];
 
@@ -60,7 +80,7 @@ async function toggleRecording() {
   }
 }
 
-// --- INVIO AUDIO A MARIANNA ---
+// === INVIO AUDIO ===
 async function sendRecordedAudio() {
   const audioElement = document.getElementById("recordedAudio");
   const responseAudio = document.getElementById("responseAudio");
@@ -70,23 +90,36 @@ async function sendRecordedAudio() {
   sendButton.disabled = true;
   responseHeaders.textContent = "⏳ Marianna sta elaborando la tua voce...";
 
-  const blob = await fetch(audioElement.src).then(r => r.blob());
-  const formData = new FormData();
-  formData.append("file", blob, "recording.wav");
+  try {
+    const blob = await fetch(audioElement.src).then(r => r.blob());
+    const formData = new FormData();
+    formData.append("file", blob, "recording.wav");
 
-  const res = await fetch(`${BASE_URL}/pipeline_audio`, {
-    method: "POST",
-    headers: {
-      "Authorization": "Basic " + btoa(`${USERNAME}:${PASSWORD}`)
-    },
-    body: formData
-  });
+    const res = await fetch(`${BASE_URL}/pipeline_audio`, {
+      method: "POST",
+      headers: {
+        "Authorization": "Basic " + btoa(`${USERNAME}:${PASSWORD}`)
+      },
+      body: formData
+    });
 
-  const audioBlob = await res.blob();
-  responseAudio.src = URL.createObjectURL(audioBlob);
+    if (!res.ok) {
+      responseHeaders.textContent = "❌ Errore durante l'invio dell'audio.";
+      return;
+    }
 
-  const transcription = res.headers.get("X-Transcription") || "—";
-  const summary = res.headers.get("X-Summary") || "—";
+    const audioBlob = await res.blob();
+    responseAudio.src = URL.createObjectURL(audioBlob);
 
-  responseHeaders.textContent = `🎤 Trascrizione: ${transcription}\n📜 Riassunto: ${summary}`;
+    const transcription = res.headers.get("X-Transcription") || "—";
+    const summary = res.headers.get("X-Summary") || "—";
+
+    responseHeaders.textContent = `🎤 Trascrizione: ${transcription}\n📜 Riassunto: ${summary}`;
+    responseAudio.play();
+
+  } catch (err) {
+    console.error(err);
+    responseHeaders.textContent = "⚠️ Errore di rete o server non raggiungibile.";
+  }
 }
+
