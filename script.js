@@ -2,6 +2,17 @@
 // === CONFIGURAZIONE ===
 const BASE_URL = "https://nlpgroup.unior.it/api/marianna_head";
 
+// === TYPEWRITER UTILITY ===
+function typeWriter(element, text, speed = 40) {
+  element.textContent = ""; // svuota il contenitore
+  let i = 0;
+  const timer = setInterval(() => {
+    element.textContent += text.charAt(i);
+    i++;
+    if (i >= text.length) clearInterval(timer);
+  }, speed);
+}
+
 // === TESTO → RISPOSTA TESTUALE ===
 async function getTextResponse() {
   const text = document.getElementById("textInput").value;
@@ -17,9 +28,7 @@ async function getTextResponse() {
   try {
     const res = await fetch(`${BASE_URL}/text_response`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ text })
     });
 
@@ -29,14 +38,18 @@ async function getTextResponse() {
     }
 
     const data = await res.json();
+    let finalText = "";
 
     if (data.summary) {
-      output.textContent = ` ${data.summary}`;
+      finalText = data.summary;  // qui puoi aggiungere immagine se vuoi
     } else if (data.transcription) {
-      output.textContent = `Trascrizione: ${data.transcription}`;
+      finalText = `Trascrizione: ${data.transcription}`;
     } else {
-      output.textContent = "Marianna non ha trovato una risposta.";
+      finalText = "Marianna non ha trovato una risposta.";
     }
+
+    // Mostra con effetto typewriter
+    typeWriter(output, finalText, 30); // 30ms per carattere
 
   } catch (err) {
     output.textContent = "⚠️ Errore di rete o server non raggiungibile.";
