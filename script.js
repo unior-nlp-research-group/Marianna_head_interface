@@ -1,7 +1,7 @@
 // Write JavaScript here
 // === CONFIGURAZIONE ===
 const BASE_URL = "https://nlpgroup.unior.it/api/marianna_head"; // API CONTENUTI
-const CHAT_URL = "https://nlpgroup.unior.it/api/marianna_chat"; // <-- IL TUO ENDPOINT /chat
+const CHAT_URL = "https://nlpgroup.unior.it/api/marianna_head/marianna_chat"; // <-- IL TUO ENDPOINT /chat
 
 // Credenziali BASIC DI MARIANNA HEAD
 const API_USERNAME = "utenteuniornlp";
@@ -68,7 +68,7 @@ async function getTextResponse() {
     // ================================================================
     // 2️⃣ CHIAMA IL TUO ENDPOINT /chat PER GENERARE RISPOSTA FINALE
     // ================================================================
-    const chatRes = await fetch(`${CHAT_URL}/chat`, {
+    const chatRes = await fetch(`${CHAT_URL}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
