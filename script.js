@@ -1,10 +1,20 @@
 // Write JavaScript here
 // === CONFIGURAZIONE ===
-const BASE_URL = "https://nlpgroup.unior.it/api/marianna_head";
+const BASE_URL = "https://nlpgroup.unior.it/api/marianna_head"; // API CONTENUTI
+const CHAT_URL = "https://nlpgroup.unior.it/api/marianna_chat"; // <-- IL TUO ENDPOINT /chat
 
-// === TYPEWRITER UTILITY ===
+// Credenziali BASIC DI MARIANNA HEAD
+const API_USERNAME = "utenteuniornlp";
+const API_PASSWORD = "prova_asr_unior";
+
+// Codifica Base64
+function basicAuthHeader() {
+  return "Basic " + btoa(`${API_USERNAME}:${API_PASSWORD}`);
+}
+
+// === TYPEWRITER ===
 function typeWriter(element, text, speed = 40) {
-  element.textContent = ""; // svuota il contenitore
+  element.textContent = "";
   let i = 0;
   const timer = setInterval(() => {
     element.textContent += text.charAt(i);
@@ -13,7 +23,9 @@ function typeWriter(element, text, speed = 40) {
   }, speed);
 }
 
-// === TESTO → RISPOSTA TESTUALE ===
+// ======================================================================
+// 🚀 **FUNZIONE PRINCIPALE: getContext → chat**
+// ======================================================================
 async function getTextResponse() {
   const text = document.getElementById("textInput").value;
   const output = document.getElementById("textOutput");
@@ -23,39 +35,68 @@ async function getTextResponse() {
     return;
   }
 
-  output.textContent = "⏳ Marianna sta cercando la risposta...";
+  output.textContent = "⏳ Marianna sta recuperando il contesto...";
 
   try {
-    const res = await fetch(`${BASE_URL}/text_response`, {
+    // ================================================================
+    // 1️⃣ CHIAMA /get_marianna_context CON AUTENTICAZIONE
+    // ================================================================
+    const contextRes = await fetch(`${BASE_URL}/get_marianna_context`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text })
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": basicAuthHeader(),
+      },
+      body: JSON.stringify({
+        text,
+        top_k: 3,
+        use_stopwords: true,
+      }),
     });
 
-    if (!res.ok) {
-      output.textContent = "❌ Errore di connessione con Marianna.";
+    if (!contextRes.ok) {
+      output.textContent = "❌ Errore nel recupero del contesto.";
       return;
     }
 
-    const data = await res.json();
-    let finalText = "";
+    const contextData = await contextRes.json();
+    const context = contextData.context ?? "";
 
-    if (data.summary) {
-      finalText = data.summary;  // qui puoi aggiungere immagine se vuoi
-    } else if (data.transcription) {
-      finalText = `Trascrizione: ${data.transcription}`;
-    } else {
-      finalText = "Marianna non ha trovato una risposta.";
+    // Mostriamo anteprima contesto
+    output.textContent = "📚 Contesto trovato. Genero risposta...";
+
+    // ================================================================
+    // 2️⃣ CHIAMA IL TUO ENDPOINT /chat PER GENERARE RISPOSTA FINALE
+    // ================================================================
+    const chatRes = await fetch(`${CHAT_URL}/chat`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": basicAuthHeader(), // se anche /chat è protetto
+      },
+      body: JSON.stringify({
+        message: text,
+        context: context,
+      }),
+    });
+
+    if (!chatRes.ok) {
+      output.textContent = "❌ Errore durante la generazione della risposta.";
+      return;
     }
 
-    // Mostra con effetto typewriter
-    typeWriter(output, finalText, 30); // 30ms per carattere
+    const chatData = await chatRes.json();
+    const finalText = chatData.response || "Marianna non ha potuto rispondere.";
+
+    // Typewriter finale
+    typeWriter(output, finalText, 25);
 
   } catch (err) {
     output.textContent = "⚠️ Errore di rete o server non raggiungibile.";
     console.error(err);
   }
 }
+
 
 // === REGISTRAZIONE AUDIO ===
 let mediaRecorder;
