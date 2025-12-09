@@ -49,7 +49,7 @@ async function getTextResponse() {
       },
       body: JSON.stringify({
         text,
-        top_k: 3,
+        top_k: 1,
         use_stopwords: true,
       }),
     });
