@@ -38,9 +38,7 @@ async function getTextResponse() {
   output.textContent = "⏳ Marianna sta recuperando il contesto...";
 
   try {
-    // ================================================================
-    // 1️⃣ CHIAMA /get_marianna_context CON AUTENTICAZIONE
-    // ================================================================
+    // 1️⃣ CHIAMA /get_marianna_context
     const contextRes = await fetch(`${BASE_URL}/get_marianna_context`, {
       method: "POST",
       headers: {
@@ -60,23 +58,22 @@ async function getTextResponse() {
     }
 
     const contextData = await contextRes.json();
-    const context = contextData.context ?? "";
 
-    // Mostriamo anteprima contesto
+    // 👉 prendiamo SOLO ciò che è dentro "context"
+    const context = contextData.context || "";
+
     output.textContent = "📚 Contesto trovato. Genero risposta...";
 
-    // ================================================================
-    // 2️⃣ CHIAMA IL TUO ENDPOINT /chat PER GENERARE RISPOSTA FINALE
-    // ================================================================
+    // 2️⃣ CHIAMA /chat → manda SOLO context
     const chatRes = await fetch(`${CHAT_URL}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": basicAuthHeader(), // se anche /chat è protetto
+        "Authorization": basicAuthHeader(),
       },
       body: JSON.stringify({
         message: text,
-        context: context,
+        context: context,  // 👈 SOLO questo viene passato
       }),
     });
 
@@ -88,7 +85,6 @@ async function getTextResponse() {
     const chatData = await chatRes.json();
     const finalText = chatData.response || "Marianna non ha potuto rispondere.";
 
-    // Typewriter finale
     typeWriter(output, finalText, 25);
 
   } catch (err) {
